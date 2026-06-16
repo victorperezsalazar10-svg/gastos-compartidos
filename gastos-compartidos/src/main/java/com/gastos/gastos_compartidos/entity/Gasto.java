@@ -12,20 +12,24 @@ public class Gasto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String descripcion;
 
+    @Column(nullable = false)
     private BigDecimal montoTotal;
 
+    @Column(nullable = false)
     private LocalDate fechaGasto;
 
+    @Column(nullable = false)
     private String tipoDivision;
 
     @ManyToOne
-    @JoinColumn(name = "pagador_id")
+    @JoinColumn(name = "pagador_id", nullable = false)
     private Usuario pagador;
 
     @ManyToOne
-    @JoinColumn(name = "grupo_id")
+    @JoinColumn(name = "grupo_id", nullable = false)
     private Grupo grupo;
 
     public Gasto() {

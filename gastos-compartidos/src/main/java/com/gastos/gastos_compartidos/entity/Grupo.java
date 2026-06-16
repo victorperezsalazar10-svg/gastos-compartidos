@@ -10,11 +10,12 @@ public class Grupo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String nombre;
 
     private String descripcion;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String codigoInvitacion;
 
     public Grupo() {
