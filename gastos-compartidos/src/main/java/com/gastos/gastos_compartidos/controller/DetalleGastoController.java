@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/detalles-gasto")
+@RequestMapping("/detalle-gastos")
 public class DetalleGastoController {
 
     private final DetalleGastoService detalleGastoService;
@@ -19,10 +19,5 @@ public class DetalleGastoController {
     @GetMapping
     public List<DetalleGasto> listar() {
         return detalleGastoService.listarTodos();
-    }
-
-    @PostMapping
-    public DetalleGasto guardar(@RequestBody DetalleGasto detalleGasto) {
-        return detalleGastoService.guardar(detalleGasto);
     }
 }

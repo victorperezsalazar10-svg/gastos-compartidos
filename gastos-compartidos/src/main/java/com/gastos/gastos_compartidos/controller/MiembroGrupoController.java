@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/miembros")
+@RequestMapping("/miembros-grupo")
 public class MiembroGrupoController {
 
     private final MiembroGrupoService miembroGrupoService;
@@ -24,5 +24,13 @@ public class MiembroGrupoController {
     @PostMapping
     public MiembroGrupo guardar(@RequestBody MiembroGrupo miembroGrupo) {
         return miembroGrupoService.guardar(miembroGrupo);
+    }
+
+    @PostMapping("/unirse")
+    public MiembroGrupo unirseAGrupo(
+            @RequestParam Long usuarioId,
+            @RequestParam String codigoInvitacion) {
+
+        return miembroGrupoService.unirseAGrupo(usuarioId, codigoInvitacion);
     }
 }
