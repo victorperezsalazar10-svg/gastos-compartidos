@@ -1,5 +1,6 @@
 package com.gastos.gastos_compartidos.controller;
 
+import com.gastos.gastos_compartidos.dto.GastoRequestDTO;
 import com.gastos.gastos_compartidos.entity.Gasto;
 import com.gastos.gastos_compartidos.service.GastoService;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +22,23 @@ public class GastoController {
         return gastoService.listarTodos();
     }
 
+    @GetMapping("/{id}")
+    public Gasto buscarPorId(@PathVariable Long id) {
+        return gastoService.buscarPorId(id);
+    }
+
     @PostMapping
-    public Gasto guardar(@RequestBody Gasto gasto) {
-        return gastoService.guardar(gasto);
+    public Gasto guardar(
+            @RequestBody GastoRequestDTO request) {
+
+        return gastoService.guardar(request);
+    }
+
+    @DeleteMapping("/{id}")
+    public String eliminar(@PathVariable Long id) {
+
+        gastoService.eliminar(id);
+
+        return "Gasto eliminado correctamente";
     }
 }

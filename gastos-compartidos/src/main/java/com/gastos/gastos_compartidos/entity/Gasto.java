@@ -1,6 +1,11 @@
 package com.gastos.gastos_compartidos.entity;
 
+import com.gastos.gastos_compartidos.enums.TipoDivision;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -12,17 +17,23 @@ public class Gasto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "La descripción es obligatoria")
     @Column(nullable = false)
     private String descripcion;
 
+    @NotNull(message = "El monto es obligatorio")
+    @DecimalMin(value = "0.01", message = "El monto debe ser mayor a 0")
     @Column(nullable = false)
     private BigDecimal montoTotal;
 
+    @NotNull(message = "La fecha del gasto es obligatoria")
     @Column(nullable = false)
     private LocalDate fechaGasto;
 
+    @NotNull(message = "El tipo de división es obligatorio")
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String tipoDivision;
+    private TipoDivision tipoDivision;
 
     @ManyToOne
     @JoinColumn(name = "pagador_id", nullable = false)
@@ -63,11 +74,11 @@ public class Gasto {
         this.fechaGasto = fechaGasto;
     }
 
-    public String getTipoDivision() {
+    public TipoDivision getTipoDivision() {
         return tipoDivision;
     }
 
-    public void setTipoDivision(String tipoDivision) {
+    public void setTipoDivision(TipoDivision tipoDivision) {
         this.tipoDivision = tipoDivision;
     }
 

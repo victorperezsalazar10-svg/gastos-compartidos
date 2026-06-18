@@ -2,6 +2,7 @@ package com.gastos.gastos_compartidos.controller;
 
 import com.gastos.gastos_compartidos.entity.Usuario;
 import com.gastos.gastos_compartidos.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +22,29 @@ public class UsuarioController {
         return usuarioService.listarTodos();
     }
 
+    @GetMapping("/{id}")
+    public Usuario buscarPorId(@PathVariable Long id) {
+        return usuarioService.buscarPorId(id);
+    }
+
     @PostMapping
-    public Usuario guardar(@RequestBody Usuario usuario) {
+    public Usuario guardar(@Valid @RequestBody Usuario usuario) {
         return usuarioService.guardar(usuario);
+    }
+
+    @PutMapping("/{id}")
+    public Usuario actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody Usuario usuario) {
+
+        return usuarioService.actualizar(id, usuario);
+    }
+
+    @DeleteMapping("/{id}")
+    public String eliminar(@PathVariable Long id) {
+
+        usuarioService.eliminar(id);
+
+        return "Usuario eliminado correctamente";
     }
 }

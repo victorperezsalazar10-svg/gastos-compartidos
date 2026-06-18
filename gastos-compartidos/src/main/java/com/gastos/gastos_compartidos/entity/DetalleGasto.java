@@ -1,6 +1,7 @@
 package com.gastos.gastos_compartidos.entity;
 
 import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -20,6 +21,8 @@ public class DetalleGasto {
     private Usuario usuario;
 
     private BigDecimal montoAsignado;
+
+    private BigDecimal porcentaje;
 
     public DetalleGasto() {
     }
@@ -50,5 +53,13 @@ public class DetalleGasto {
 
     public void setMontoAsignado(BigDecimal montoAsignado) {
         this.montoAsignado = montoAsignado;
+    }
+
+    public BigDecimal getPorcentaje() {
+        return porcentaje;
+    }
+
+    public void setPorcentaje(BigDecimal porcentaje) {
+        this.porcentaje = porcentaje;
     }
 }

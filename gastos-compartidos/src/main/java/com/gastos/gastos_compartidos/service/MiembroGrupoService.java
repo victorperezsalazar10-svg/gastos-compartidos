@@ -36,22 +36,38 @@ public class MiembroGrupoService {
         return miembroGrupoRepository.save(miembroGrupo);
     }
 
-    public MiembroGrupo unirseAGrupo(Long usuarioId, String codigoInvitacion) {
+    public MiembroGrupo unirseAGrupo(
+            Long usuarioId,
+            String codigoInvitacion) {
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario =
+                usuarioRepository.findById(usuarioId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Usuario no encontrado"));
 
-        Grupo grupo = grupoRepository.findByCodigoInvitacion(codigoInvitacion)
-                .orElseThrow(() -> new RuntimeException("Código de invitación inválido"));
+        Grupo grupo =
+                grupoRepository.findByCodigoInvitacion(
+                                codigoInvitacion)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Código de invitación inválido"));
 
-        boolean yaExiste = miembroGrupoRepository
-                .existsByUsuarioIdAndGrupoId(usuarioId, grupo.getId());
+        boolean yaExiste =
+                miembroGrupoRepository
+                        .existsByUsuarioIdAndGrupoId(
+                                usuarioId,
+                                grupo.getId());
 
         if (yaExiste) {
-            throw new RuntimeException("El usuario ya pertenece al grupo");
+
+            throw new RuntimeException(
+                    "El usuario ya pertenece al grupo");
         }
 
-        MiembroGrupo miembro = new MiembroGrupo();
+        MiembroGrupo miembro =
+                new MiembroGrupo();
+
         miembro.setUsuario(usuario);
         miembro.setGrupo(grupo);
         miembro.setRol("MIEMBRO");
@@ -60,4 +76,19 @@ public class MiembroGrupoService {
         return miembroGrupoRepository.save(miembro);
     }
 
+    public void salirDelGrupo(
+            Long usuarioId,
+            Long grupoId) {
+
+        MiembroGrupo miembro =
+                miembroGrupoRepository
+                        .findByUsuarioIdAndGrupoId(
+                                usuarioId,
+                                grupoId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "El usuario no pertenece al grupo"));
+
+        miembroGrupoRepository.delete(miembro);
+    }
 }

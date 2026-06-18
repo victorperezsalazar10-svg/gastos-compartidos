@@ -12,17 +12,25 @@ public class LiquidacionController {
 
     private final LiquidacionService liquidacionService;
 
-    public LiquidacionController(LiquidacionService liquidacionService) {
+    public LiquidacionController(
+            LiquidacionService liquidacionService) {
+
         this.liquidacionService = liquidacionService;
     }
 
-    @GetMapping
-    public List<Liquidacion> listar() {
-        return liquidacionService.listarTodos();
+    @GetMapping("/grupo/{grupoId}")
+    public List<Liquidacion> calcular(
+            @PathVariable Long grupoId) {
+
+        return liquidacionService
+                .calcularLiquidaciones(grupoId);
     }
 
-    @PostMapping
-    public Liquidacion guardar(@RequestBody Liquidacion liquidacion) {
-        return liquidacionService.guardar(liquidacion);
+    @GetMapping("/grupo/{grupoId}/historial")
+    public List<Liquidacion> historial(
+            @PathVariable Long grupoId) {
+
+        return liquidacionService
+                .listarPorGrupo(grupoId);
     }
 }
