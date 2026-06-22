@@ -2,6 +2,8 @@
 
 Aplicación web para gestionar y dividir gastos entre grupos de personas. Permite registrar grupos, agregar miembros, registrar gastos con distintos tipos de división y calcular automáticamente las liquidaciones necesarias para saldar deudas.
 
+![Gastos Compartidos](imagenes/GastosCompartidos.png)
+
 ---
 
 ## Tecnologías utilizadas
