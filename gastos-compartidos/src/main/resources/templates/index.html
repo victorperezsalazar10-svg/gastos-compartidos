@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gastos Compartidos - Inicio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hidden { display: none; }
+        .card-group { cursor: pointer; transition: 0.3s; }
+        .card-group:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div id="loginSection" class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <h2 class="mb-4">Bienvenido</h2>
+                        <p class="text-muted">Ingresa tu email para comenzar</p>
+                        <input type="email" id="loginEmail" class="form-control mb-3" placeholder="correo@ejemplo.com">
+                        <button onclick="login()" class="btn btn-primary w-100 mb-2">Entrar</button>
+                        <hr>
+                        <p class="small">¿No tienes cuenta? Regístrate</p>
+                        <input type="text" id="regNombre" class="form-control mb-2" placeholder="Tu Nombre">
+                        <input type="email" id="regEmail" class="form-control mb-3" placeholder="Tu Correo">
+                        <button onclick="registrar()" class="btn btn-outline-success w-100">Crear Cuenta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardSection" class="container mt-4 hidden">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary rounded mb-4 shadow px-3">
+            <a class="navbar-brand" href="#">Gastos Compartidos</a>
+            <div class="ms-auto">
+                <span id="userBadge" class="navbar-text text-white me-3"></span>
+                <button onclick="logout()" class="btn btn-sm btn-light">Salir</button>
+            </div>
+        </nav>
+
+        <div class="row">
+            <div class="col-md-8">
+                <h3>Mis Grupos</h3>
+                <div id="listaGrupos" class="row mt-3">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5>Unirse a un Grupo</h5>
+                        <input type="text" id="codigoInv" class="form-control mb-2" placeholder="Código (ej: PLAYA2025)">
+                        <button onclick="unirseGrupo()" class="btn btn-success w-100">Unirse</button>
+                    </div>
+                </div>
+                <div class="card shadow-sm text-center py-4 bg-info text-white">
+                    <div class="card-body">
+                        <h5>¿Nuevo Plan?</h5>
+                        <button class="btn btn-light mt-2" onclick="location.href='/grupos-page'">Crear Nuevo Grupo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8081";
+        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+        window.onload = () => {
+            if (currentUser) mostrarDashboard();
+        };
+
+        function mostrarDashboard() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userBadge').innerText = "Hola, " + currentUser.nombre;
+            cargarGrupos();
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            try {
+                const res = await fetch(`${API_BASE}/usuarios/buscar-email?email=${email}`);
+                if (!res.ok) throw new Error();
+                const user = await res.json();
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                location.reload();
+            } catch (e) { alert("Usuario no encontrado. Por favor regístrate."); }
+        }
+
+        async function registrar() {
+            const nombre = document.getElementById('regNombre').value;
+            const email = document.getElementById('regEmail').value;
+            try {
+                const res = await fetch(`${API_BASE}/usuarios`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nombre, email })
+                });
+                const user = await res.json();
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                location.reload();
+            } catch (e) { alert("Error al registrar. El email ya podría existir."); }
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        async function cargarGrupos() {
+            const res = await fetch(`${API_BASE}/miembros-grupo`);
+            const miembros = await res.json();
+            const misGrupos = miembros.filter(m => m.usuario.id === currentUser.id);
+
+            const lista = document.getElementById('listaGrupos');
+            lista.innerHTML = "";
+
+            if (misGrupos.length === 0) {
+                lista.innerHTML = "<p class='text-muted'>Aún no perteneces a ningún grupo.</p>";
+                return;
+            }
+
+            misGrupos.forEach(m => {
+                lista.innerHTML += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card card-group shadow-sm" onclick="irAGrupo(${m.grupo.id})">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-primary">${m.grupo.nombre}</h5>
+                                <p class="card-text small text-muted">${m.grupo.descripcion}</p>
+                                <span class="badge bg-secondary">Código: ${m.grupo.codigoInvitacion}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function unirseGrupo() {
+            const codigo = document.getElementById('codigoInv').value;
+            try {
+                const res = await fetch(`${API_BASE}/miembros-grupo/unirse`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ usuarioId: currentUser.id, codigoInvitacion: codigo })
+                });
+                if (!res.ok) {
+                    const error = await res.json();
+                    throw new Error(error.mensaje);
+                }
+                alert("¡Te has unido al grupo!");
+                cargarGrupos();
+            } catch (e) { alert("Error: " + e.message); }
+        }
+
+        function irAGrupo(id) {
+            localStorage.setItem('selectedGroupId', id);
+            location.href = "/gastos-page";
+        }
+    </script>
+</body>
+</html>

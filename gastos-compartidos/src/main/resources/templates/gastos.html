@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gastos del Grupo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .balance-pos { color: #198754; font-weight: bold; }
+        .balance-neg { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">← Volver al Inicio</a>
+            <span id="groupTitle" class="navbar-text text-white h4 mb-0"></span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Lista de Gastos</h5>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalGasto"> + Nuevo Gasto</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Descripción</th>
+                                    <th>Pagado por</th>
+                                    <th class="text-end">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaGastos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Liquidaciones (Quién debe a quién)</h5>
+                        <button onclick="calcularLiquidaciones()" class="btn btn-outline-primary btn-sm">Recalcular</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="listaLiquidaciones" class="list-group list-group-flush"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Saldos del Grupo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="rankingUsuarios"></div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button onclick="exportarCsv()" class="btn btn-outline-secondary">Exportar Gastos (CSV)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalGasto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Gasto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formGasto">
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <input type="text" id="desc" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Monto Total</label>
+                            <input type="number" id="monto" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" id="fecha" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de División</label>
+                            <select id="tipoDiv" class="form-select">
+                                <option value="IGUAL">Partes Iguales</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Guardar Gasto</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = "http://localhost:8081";
+        const groupId = localStorage.getItem('selectedGroupId');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+        if (!groupId || !currentUser) location.href = "/";
+
+        window.onload = () => {
+            document.getElementById('fecha').valueAsDate = new Date();
+            cargarDatosGrupo();
+            cargarGastos();
+            cargarRanking();
+            cargarLiquidaciones();
+        };
+
+        async function cargarDatosGrupo() {
+            const res = await fetch(`${API_BASE}/grupos/${groupId}`);
+            const grupo = await res.json();
+            document.getElementById('groupTitle').innerText = grupo.nombre;
+        }
+
+        async function cargarGastos() {
+            const res = await fetch(`${API_BASE}/gastos/grupo/${groupId}`);
+            const gastos = await res.json();
+            const tabla = document.getElementById('tablaGastos');
+            tabla.innerHTML = "";
+            gastos.forEach(g => {
+                tabla.innerHTML += `
+                    <tr>
+                        <td>${g.fechaGasto}</td>
+                        <td>${g.descripcion}</td>
+                        <td>${g.pagador.nombre}</td>
+                        <td class="text-end fw-bold">$${g.montoTotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function cargarRanking() {
+            const res = await fetch(`${API_BASE}/grupos/${groupId}/ranking`);
+            const ranking = await res.json();
+            const div = document.getElementById('rankingUsuarios');
+            div.innerHTML = "";
+            ranking.forEach(r => {
+                const clase = r.saldo >= 0 ? 'balance-pos' : 'balance-neg';
+                div.innerHTML += `
+                    <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
+                        <span>${r.nombreUsuario}</span>
+                        <span class="${clase}">${r.saldo >= 0 ? '+' : ''}${r.saldo.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+        }
+
+        async function cargarLiquidaciones() {
+            const res = await fetch(`${API_BASE}/liquidaciones/grupo/${groupId}/historial`);
+            const liqs = await res.json();
+            const lista = document.getElementById('listaLiquidaciones');
+            lista.innerHTML = liqs.length === 0 ? "<p class='text-muted small'>No hay deudas pendientes.</p>" : "";
+            liqs.forEach(l => {
+                lista.innerHTML += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><strong>${l.deudor.nombre}</strong> debe a <strong>${l.acreedor.nombre}</strong></span>
+                        <span class="badge bg-success rounded-pill">$${l.monto.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('formGasto').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                descripcion: document.getElementById('desc').value,
+                montoTotal: document.getElementById('monto').value,
+                fechaGasto: document.getElementById('fecha').value,
+                tipoDivision: document.getElementById('tipoDiv').value,
+                pagadorId: currentUser.id,
+                grupoId: groupId,
+                detalles: []
+            };
+
+            const res = await fetch(`${API_BASE}/gastos`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('modalGasto')).hide();
+                location.reload();
+            } else {
+                const err = await res.json();
+                alert("Error: " + err.mensaje);
+            }
+        };
+
+        async function calcularLiquidaciones() {
+            await fetch(`${API_BASE}/liquidaciones/grupo/${groupId}/calcular`, { method: 'POST' });
+            location.reload();
+        }
+
+        function exportarCsv() {
+            window.open(`${API_BASE}/gastos/grupo/${groupId}/exportar`);
+        }
+    </script>
+</body>
+</html>

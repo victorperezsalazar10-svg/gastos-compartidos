@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Grupo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">← Volver al Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-white">
+                        <h3 class="mb-0">Crear Nuevo Grupo</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="formGrupo">
+                            <div class="mb-3">
+                                <label class="form-label">Nombre del Grupo</label>
+                                <input type="text" id="nombre" class="form-control" placeholder="Ej: Amigos del Barrio" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea id="descripcion" class="form-control" rows="3" placeholder="¿Para qué es este grupo?" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Código de Invitación (Único)</label>
+                                <div class="input-group">
+                                    <input type="text" id="codigo" class="form-control" placeholder="Ej: ASADO2024" required>
+                                    <button type="button" onclick="generarCodigo()" class="btn btn-outline-secondary">Generar</button>
+                                </div>
+                                <div class="form-text">Este código servirá para que otros se unan.</div>
+                            </div>
+                            <hr>
+                            <button type="submit" class="btn btn-primary w-100 p-2">Crear Grupo y Guardar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8081";
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+        if (!currentUser) location.href = "/";
+
+        function generarCodigo() {
+            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('codigo').value = random;
+        }
+
+        document.getElementById('formGrupo').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const data = {
+                nombre: document.getElementById('nombre').value,
+                descripcion: document.getElementById('descripcion').value,
+                codigoInvitacion: document.getElementById('codigo').value,
+                creadorId: currentUser.id
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/grupos`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    alert("¡Grupo creado con éxito!");
+                    location.href = "/";
+                } else {
+                    const err = await res.json();
+                    alert("Error: " + err.mensaje);
+                }
+            } catch (error) {
+                alert("Error de conexión con el servidor");
+            }
+        };
+    </script>
+</body>
+</html>
